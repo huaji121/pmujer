@@ -94,6 +94,9 @@ func main() {
 	// Camera position (pixels).
 	var camX, camY float32
 
+	// Debug mode – toggle with F3.
+	debug := false
+
 	// Track real time for a fixed-step physics loop.
 	var lastTicks uint64
 
@@ -122,6 +125,10 @@ func main() {
 				key := event.KeyboardEvent()
 				if key.Scancode == sdl.SCANCODE_ESCAPE {
 					return sdl.EndLoop
+				}
+				// F3 to toggle debug mode
+				if key.Scancode == sdl.SCANCODE_F3 {
+					debug = !debug
 				}
 				// R to die and respawn (triggers blood particles when alive)
 				if key.Scancode == sdl.SCANCODE_R {
@@ -174,7 +181,7 @@ func main() {
 
 		tm.Render(renderer, camX, camY)
 		bloodPS.Render(renderer, camX, camY)
-		p.Render(renderer, camX, camY)
+		p.Render(renderer, camX, camY, debug)
 
 		renderer.Present()
 

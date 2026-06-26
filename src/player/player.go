@@ -33,8 +33,8 @@ const (
 // X: collision box is horizontally centred → (1 - 0.5) / 2 = 0.25
 // Y: collision box bottom aligns with sprite bottom → 1 - 0.7 = 0.30
 const (
-	colOffX = 0.27
-	colOffY = 0.30
+	colOffX = 0
+	colOffY = 0
 )
 
 // Player is the controllable character.
@@ -66,16 +66,16 @@ func New(renderer *sdl.Renderer, tileX, tileY float32) *Player {
 		panic("failed to load player texture: " + err.Error())
 	}
 	return &Player{
-		X:         tileX,
-		Y:         tileY,
-		Texture:   tex,
-		Alive:     true,
+		X:           tileX,
+		Y:           tileY,
+		Texture:     tex,
+		Alive:       true,
 		FacingRight: true,
-		JumpsLeft: MaxJumps,
-		SpawnX:    tileX,
-		SpawnY:    tileY,
-		LastVisX:  tileX + playerColW/2,
-		LastVisY:  tileY + playerColH/2,
+		JumpsLeft:   MaxJumps,
+		SpawnX:      tileX,
+		SpawnY:      tileY,
+		LastVisX:    tileX + playerColW/2,
+		LastVisY:    tileY + playerColH/2,
 	}
 }
 
@@ -228,13 +228,14 @@ func (p *Player) Respawn() {
 	p.Alive = true
 }
 
-// Render draws the player sprite centered on the collision box.
-func (p *Player) Render(renderer *sdl.Renderer, camX, camY float32) {
+// Render draws the player sprite centred on the collision box.
+// When debug is true the collision box is drawn as a green outline.
+func (p *Player) Render(renderer *sdl.Renderer, camX, camY float32, debug bool) {
 	if !p.Alive {
 		return
 	}
 	scaled := float32(tilemap.ScaledTile)
-	// Sprite is 1×1 tile-unit, offset so the collision box is centered inside it.
+	// Sprite is 1×1 tile-unit, offset so the collision box is centred inside it.
 	offX, offY := float32(colOffX), float32(colOffY)
 	dst := sdl.FRect{
 		X: (p.X-offX)*scaled - camX,
@@ -243,6 +244,18 @@ func (p *Player) Render(renderer *sdl.Renderer, camX, camY float32) {
 		H: scaled,
 	}
 	renderer.RenderTexture(p.Texture, nil, &dst)
+
+	// Debug: draw collision box
+	if debug {
+		colDst := sdl.FRect{
+			X: p.X*scaled - camX,
+			Y: p.Y*scaled - camY,
+			W: playerColW * scaled,
+			H: playerColH * scaled,
+		}
+		renderer.SetDrawColor(0, 255, 0, 255) // green
+		renderer.RenderRect(&colDst)
+	}
 }
 
 // CenterX returns the collision box centre X in tile-units (for camera).
