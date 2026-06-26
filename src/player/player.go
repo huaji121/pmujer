@@ -13,47 +13,64 @@ import (
 
 // Physics constants (units: tile-units and seconds).
 const (
-	Speed          = 6.0  // horizontal movement speed (tiles/s)
+	Speed          = 6.0   // horizontal movement speed (tiles/s)
 	JumpVelocity   = -13.5 // initial vertical velocity on jump (tiles/s, up)
 	Gravity        = 28.0  // downward acceleration (tiles/s²)
-	GravityFallMul = 1.8  // extra gravity multiplier when falling
+	GravityFallMul = 1.8   // extra gravity multiplier when falling
 	MaxFallSpeed   = 20.0  // terminal fall speed (tiles/s)
-	MaxJumps       = 2    // number of jumps allowed (1 = single, 2 = double)
+	MaxJumps       = 2     // number of jumps allowed (1 = single, 2 = double)
+)
+
+// Collision box dimensions in tile-units.
+// The sprite is 16×16 but the visible character is centered within it,
+// so the hitbox is smaller than a full tile.
+const (
+	playerColW = 0.45 // collision box width
+	playerColH = 0.7  // collision box height
+)
+
+// Offsets to position the collision box inside the 1×1 sprite area.
+// X: collision box is horizontally centred → (1 - 0.5) / 2 = 0.25
+// Y: collision box bottom aligns with sprite bottom → 1 - 0.7 = 0.30
+const (
+	colOffX = 0.27
+	colOffY = 0.30
 )
 
 // Player is the controllable character.
+// X, Y is the top-left of the collision box (not the sprite).
 type Player struct {
-	X, Y   float32 // position in tile-units (top-left of the 1×1 bounding box)
+	X, Y   float32 // collision box top-left in tile-units
 	VX, VY float32 // velocity in tile-units/s
 
 	Texture *sdl.Texture
 
 	// State
-	Grounded     bool
-	Alive        bool
-	FacingRight  bool
-	JumpsLeft    int  // remaining jumps (resets to MaxJumps on landing)
+	Grounded       bool
+	Alive          bool
+	FacingRight    bool
+	JumpsLeft      int  // remaining jumps (resets to MaxJumps on landing)
 	jumpWasPressed bool // previous frame's jump key state, for edge detection
 
-	// Spawn point for respawning
+	// Spawn point for respawning (collision box top-left)
 	SpawnX, SpawnY float32
 }
 
-// New creates a player at the given tile position and loads its texture.
+// New creates a player so that its collision box sits at (tileX, tileY).
 func New(renderer *sdl.Renderer, tileX, tileY float32) *Player {
 	tex, err := img.LoadTexture(renderer, "assets/textures/player.png")
 	if err != nil {
 		panic("failed to load player texture: " + err.Error())
 	}
 	return &Player{
-		X:         tileX,
-		Y:         tileY,
-		Texture:   tex,
-		Alive:     true,
+		X:           tileX,
+		Y:           tileY,
+		Texture:     tex,
+		Alive:       true,
 		FacingRight: true,
-		JumpsLeft: MaxJumps,
-		SpawnX:    tileX,
-		SpawnY:    tileY,
+		JumpsLeft:   MaxJumps,
+		SpawnX:      tileX,
+		SpawnY:      tileY,
 	}
 }
 
@@ -125,12 +142,10 @@ func (p *Player) moveAndCollide(dt float32, tm *tilemap.Tilemap) {
 
 // resolveHorizontal pushes the player out of any solid tiles on the X axis.
 func (p *Player) resolveHorizontal(tm *tilemap.Tilemap) {
-	pW, pH := playerSize()
-
 	left := int(math.Floor(float64(p.X)))
-	right := int(math.Floor(float64(p.X + pW - 0.001)))
+	right := int(math.Floor(float64(p.X + playerColW - 0.001)))
 	top := int(math.Floor(float64(p.Y)))
-	bottom := int(math.Floor(float64(p.Y + pH - 0.001)))
+	bottom := int(math.Floor(float64(p.Y + playerColH - 0.001)))
 
 	for ty := top; ty <= bottom; ty++ {
 		for tx := left; tx <= right; tx++ {
@@ -141,7 +156,7 @@ func (p *Player) resolveHorizontal(tm *tilemap.Tilemap) {
 			tileR := float32(tx) + 1
 
 			if p.VX > 0 { // moving right → push left
-				p.X = tileL - pW
+				p.X = tileL - playerColW
 			} else if p.VX < 0 { // moving left → push right
 				p.X = tileR
 			}
@@ -152,12 +167,10 @@ func (p *Player) resolveHorizontal(tm *tilemap.Tilemap) {
 
 // resolveVertical pushes the player out of any solid tiles on the Y axis.
 func (p *Player) resolveVertical(tm *tilemap.Tilemap) {
-	pW, pH := playerSize()
-
 	left := int(math.Floor(float64(p.X)))
-	right := int(math.Floor(float64(p.X + pW - 0.001)))
+	right := int(math.Floor(float64(p.X + playerColW - 0.001)))
 	top := int(math.Floor(float64(p.Y)))
-	bottom := int(math.Floor(float64(p.Y + pH - 0.001)))
+	bottom := int(math.Floor(float64(p.Y + playerColH - 0.001)))
 
 	p.Grounded = false
 
@@ -170,7 +183,7 @@ func (p *Player) resolveVertical(tm *tilemap.Tilemap) {
 			tileB := float32(ty) + 1
 
 			if p.VY > 0 { // moving down → land on top
-				p.Y = tileT - pH
+				p.Y = tileT - playerColH
 				p.VY = 0
 				p.Grounded = true
 				p.JumpsLeft = MaxJumps
@@ -180,12 +193,6 @@ func (p *Player) resolveVertical(tm *tilemap.Tilemap) {
 			}
 		}
 	}
-}
-
-// playerSize returns the player's bounding-box dimensions in tile-units.
-// The sprite is 16×16 at scale 3, same as one tile → 1×1 tile-units.
-func playerSize() (float32, float32) {
-	return 1.0, 1.0
 }
 
 // Respawn teleports the player back to their spawn point.
@@ -200,27 +207,29 @@ func (p *Player) Respawn() {
 	p.Alive = true
 }
 
-// Render draws the player sprite at the current screen position.
+// Render draws the player sprite centered on the collision box.
 func (p *Player) Render(renderer *sdl.Renderer, camX, camY float32) {
 	if !p.Alive {
 		return
 	}
 	scaled := float32(tilemap.ScaledTile)
+	// Sprite is 1×1 tile-unit, offset so the collision box is centered inside it.
+	offX, offY := float32(colOffX), float32(colOffY)
 	dst := sdl.FRect{
-		X: p.X*scaled - camX,
-		Y: p.Y*scaled - camY,
+		X: (p.X-offX)*scaled - camX,
+		Y: (p.Y-offY)*scaled - camY,
 		W: scaled,
 		H: scaled,
 	}
 	renderer.RenderTexture(p.Texture, nil, &dst)
 }
 
-// CenterX returns the player's centre X in tile-units (for camera tracking).
+// CenterX returns the collision box centre X in tile-units (for camera).
 func (p *Player) CenterX() float32 {
-	return p.X + 0.5
+	return p.X + playerColW/2
 }
 
-// CenterY returns the player's centre Y in tile-units.
+// CenterY returns the collision box centre Y in tile-units.
 func (p *Player) CenterY() float32 {
-	return p.Y + 0.5
+	return p.Y + playerColH/2
 }
