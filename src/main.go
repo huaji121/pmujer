@@ -5,6 +5,7 @@ import (
 	"github.com/Zyko0/go-sdl3/bin/binsdl"
 	"github.com/Zyko0/go-sdl3/sdl"
 
+	"pmujer/src/camera"
 	"pmujer/src/particle"
 	"pmujer/src/player"
 	"pmujer/src/tilemap"
@@ -91,8 +92,9 @@ func main() {
 	bloodPS := particle.NewSystem(renderer, "assets/textures/blood.png", 20.0)
 	var wasAlive = true // track previous frame's alive state
 
-	// Camera position (pixels).
-	var camX, camY float32
+	// Camera.
+	cam := camera.New(WindowWidth, WindowHeight)
+	cam.SetBounds(tm.Width, tm.Height)
 
 	// Debug mode – toggle with F3.
 	debug := false
@@ -151,37 +153,17 @@ func main() {
 
 		bloodPS.Update(dt)
 
-		// -- Camera: smooth follow --
-		targetCamX := p.CenterX()*float32(tilemap.ScaledTile) - WindowWidth/2
-		targetCamY := p.CenterY()*float32(tilemap.ScaledTile) - WindowHeight/2
-
-		// Lerp camera toward target for smooth scrolling.
-		camX += (targetCamX - camX) * 0.12
-		camY += (targetCamY - camY) * 0.12
-
-		// Clamp camera to level bounds.
-		maxCamX := float32(tm.Width)*float32(tilemap.ScaledTile) - WindowWidth
-		maxCamY := float32(tm.Height)*float32(tilemap.ScaledTile) - WindowHeight
-		if camX < 0 {
-			camX = 0
-		}
-		if camY < 0 {
-			camY = 0
-		}
-		if camX > maxCamX {
-			camX = maxCamX
-		}
-		if camY > maxCamY {
-			camY = maxCamY
-		}
+		// -- Camera --
+		scaled := float32(tilemap.ScaledTile)
+		cam.Follow(p.CenterX()*scaled, p.CenterY()*scaled, dt)
 
 		// -- Render --
 		renderer.SetDrawColor(135, 206, 235, 255) // sky blue
 		renderer.Clear()
 
-		tm.Render(renderer, camX, camY)
-		bloodPS.Render(renderer, camX, camY)
-		p.Render(renderer, camX, camY, debug)
+		tm.Render(renderer, cam.X, cam.Y)
+		bloodPS.Render(renderer, cam.X, cam.Y)
+		p.Render(renderer, cam.X, cam.Y, debug)
 
 		renderer.Present()
 
