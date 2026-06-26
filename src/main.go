@@ -5,6 +5,7 @@ import (
 	"github.com/Zyko0/go-sdl3/bin/binsdl"
 	"github.com/Zyko0/go-sdl3/sdl"
 
+	"pmujer/src/particle"
 	"pmujer/src/player"
 	"pmujer/src/tilemap"
 )
@@ -86,6 +87,10 @@ func main() {
 	// Spawn the player on the first safe ground tile (row 12, column 1).
 	p := player.New(renderer, 1, 12)
 
+	// Particle system for blood effects.
+	bloodPS := particle.NewSystem(renderer, "assets/textures/blood.png", 20.0)
+	var wasAlive = true // track previous frame's alive state
+
 	// Camera position (pixels).
 	var camX, camY float32
 
@@ -118,8 +123,11 @@ func main() {
 				if key.Scancode == sdl.SCANCODE_ESCAPE {
 					return sdl.EndLoop
 				}
-				// R to respawn
+				// R to die and respawn (triggers blood particles when alive)
 				if key.Scancode == sdl.SCANCODE_R {
+					if p.Alive {
+						bloodPS.Emit(p.CenterX(), p.CenterY(), 30, 8.0, 1.0, 0.3)
+					}
 					p.Respawn()
 				}
 			}
@@ -127,6 +135,14 @@ func main() {
 
 		// -- Update --
 		p.Update(dt, tm)
+
+		// Detect death from falling off map → emit blood particles
+		if wasAlive && !p.Alive {
+			bloodPS.Emit(p.LastVisX, p.LastVisY, 30, 8.0, 1.0, 0.3)
+		}
+		wasAlive = p.Alive
+
+		bloodPS.Update(dt)
 
 		// -- Camera: smooth follow --
 		targetCamX := p.CenterX()*float32(tilemap.ScaledTile) - WindowWidth/2
@@ -157,6 +173,7 @@ func main() {
 		renderer.Clear()
 
 		tm.Render(renderer, camX, camY)
+		bloodPS.Render(renderer, camX, camY)
 		p.Render(renderer, camX, camY)
 
 		renderer.Present()

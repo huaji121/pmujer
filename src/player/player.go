@@ -54,6 +54,9 @@ type Player struct {
 
 	// Spawn point for respawning (collision box top-left)
 	SpawnX, SpawnY float32
+
+	// Last visible position (sprite centre) before death, for particle spawning
+	LastVisX, LastVisY float32
 }
 
 // New creates a player so that its collision box sits at (tileX, tileY).
@@ -63,14 +66,16 @@ func New(renderer *sdl.Renderer, tileX, tileY float32) *Player {
 		panic("failed to load player texture: " + err.Error())
 	}
 	return &Player{
-		X:           tileX,
-		Y:           tileY,
-		Texture:     tex,
-		Alive:       true,
+		X:         tileX,
+		Y:         tileY,
+		Texture:   tex,
+		Alive:     true,
 		FacingRight: true,
-		JumpsLeft:   MaxJumps,
-		SpawnX:      tileX,
-		SpawnY:      tileY,
+		JumpsLeft: MaxJumps,
+		SpawnX:    tileX,
+		SpawnY:    tileY,
+		LastVisX:  tileX + playerColW/2,
+		LastVisY:  tileY + playerColH/2,
 	}
 }
 
@@ -122,9 +127,15 @@ func (p *Player) Update(dt float32, tm *tilemap.Tilemap) {
 	// --- Move & collide (separate axes) ---
 	p.moveAndCollide(dt, tm)
 
-	// --- Respawn if fallen off the map ---
+	// Track last visible position (before falling off map)
+	if p.Y <= float32(tm.Height) {
+		p.LastVisX = p.X + playerColW/2
+		p.LastVisY = p.Y + playerColH/2
+	}
+
+	// --- Die if fallen off the map ---
 	if p.Y > float32(tm.Height+5) {
-		p.Respawn()
+		p.Die()
 	}
 }
 
@@ -193,6 +204,16 @@ func (p *Player) resolveVertical(tm *tilemap.Tilemap) {
 			}
 		}
 	}
+}
+
+// Die marks the player as dead. Callers are responsible for emitting particles.
+func (p *Player) Die() {
+	if !p.Alive {
+		return
+	}
+	p.VX = 0
+	p.VY = 0
+	p.Alive = false
 }
 
 // Respawn teleports the player back to their spawn point.
