@@ -22,19 +22,18 @@ const (
 )
 
 // Collision box dimensions in tile-units.
-// The sprite is 16×16 but the visible character is centered within it,
-// so the hitbox is smaller than a full tile.
+// The sprite is 16×16 but the visible character is 6×11 px, centred.
 const (
-	playerColW = 0.45 // collision box width
-	playerColH = 0.7  // collision box height
+	playerColW = 6.0 / 16.0  // 0.375
+	playerColH = 11.0 / 16.0 // 0.6875
 )
 
 // Offsets to position the collision box inside the 1×1 sprite area.
-// X: collision box is horizontally centred → (1 - 0.5) / 2 = 0.25
-// Y: collision box bottom aligns with sprite bottom → 1 - 0.7 = 0.30
+// X: (16 - 6) / 2 / 16 = 5/16  → character centred horizontally
+// Y: (16 - 11) / 16 = 5/16     → feet at sprite bottom
 const (
-	colOffX = 0
-	colOffY = 0
+	colOffX = 5.0 / 16.0 // 0.3125
+	colOffY = 5.0 / 16.0 // 0.3125
 )
 
 // Player is the controllable character.
