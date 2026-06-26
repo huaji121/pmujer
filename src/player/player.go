@@ -18,6 +18,7 @@ const (
 	Gravity        = 28.0  // downward acceleration (tiles/s²)
 	GravityFallMul = 1.8  // extra gravity multiplier when falling
 	MaxFallSpeed   = 20.0  // terminal fall speed (tiles/s)
+	MaxJumps       = 2    // number of jumps allowed (1 = single, 2 = double)
 )
 
 // Player is the controllable character.
@@ -28,9 +29,11 @@ type Player struct {
 	Texture *sdl.Texture
 
 	// State
-	Grounded  bool
-	Alive     bool
-	FacingRight bool
+	Grounded     bool
+	Alive        bool
+	FacingRight  bool
+	JumpsLeft    int  // remaining jumps (resets to MaxJumps on landing)
+	jumpWasPressed bool // previous frame's jump key state, for edge detection
 
 	// Spawn point for respawning
 	SpawnX, SpawnY float32
@@ -43,13 +46,14 @@ func New(renderer *sdl.Renderer, tileX, tileY float32) *Player {
 		panic("failed to load player texture: " + err.Error())
 	}
 	return &Player{
-		X:           tileX,
-		Y:           tileY,
-		Texture:     tex,
-		Alive:       true,
+		X:         tileX,
+		Y:         tileY,
+		Texture:   tex,
+		Alive:     true,
 		FacingRight: true,
-		SpawnX:      tileX,
-		SpawnY:      tileY,
+		JumpsLeft: MaxJumps,
+		SpawnX:    tileX,
+		SpawnY:    tileY,
 	}
 }
 
@@ -74,14 +78,17 @@ func (p *Player) Update(dt float32, tm *tilemap.Tilemap) {
 		p.FacingRight = true
 	}
 
-	// Jump: W or J (only when grounded)
-	if (keys[sdl.SCANCODE_W] || keys[sdl.SCANCODE_J]) && p.Grounded {
-		p.VY = JumpVelocity
+	// Jump: W or J — edge-triggered, supports double jump
+	jumpPressed := keys[sdl.SCANCODE_W] || keys[sdl.SCANCODE_J]
+	if jumpPressed && !p.jumpWasPressed && p.JumpsLeft > 0 {
+		p.VY = float32(JumpVelocity)
 		p.Grounded = false
+		p.JumpsLeft--
 	}
+	p.jumpWasPressed = jumpPressed
 
 	// Variable jump height: releasing the jump key early cuts upward velocity
-	if !keys[sdl.SCANCODE_W] && !keys[sdl.SCANCODE_J] && p.VY < float32(JumpVelocity)*0.4 {
+	if !jumpPressed && p.VY < float32(JumpVelocity)*0.4 {
 		p.VY = float32(JumpVelocity) * 0.4
 	}
 
@@ -166,6 +173,7 @@ func (p *Player) resolveVertical(tm *tilemap.Tilemap) {
 				p.Y = tileT - pH
 				p.VY = 0
 				p.Grounded = true
+				p.JumpsLeft = MaxJumps
 			} else if p.VY < 0 { // moving up → hit ceiling
 				p.Y = tileB
 				p.VY = 0
@@ -187,6 +195,8 @@ func (p *Player) Respawn() {
 	p.VX = 0
 	p.VY = 0
 	p.Grounded = false
+	p.JumpsLeft = MaxJumps
+	p.jumpWasPressed = false
 	p.Alive = true
 }
 
