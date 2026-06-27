@@ -7,14 +7,10 @@ import (
 
 	"pmujer/src/audio"
 	"pmujer/src/camera"
+	"pmujer/src/config"
 	"pmujer/src/particle"
 	"pmujer/src/player"
 	"pmujer/src/tilemap"
-)
-
-const (
-	WindowWidth  = 960
-	WindowHeight = 720
 )
 
 // buildLevel creates the default level layout.
@@ -78,7 +74,7 @@ func main() {
 	}
 
 	window, renderer, err := sdl.CreateWindowAndRenderer(
-		"Pmujer", WindowWidth, WindowHeight, 0,
+		"Pmujer", config.WindowWidth, config.WindowHeight, 0,
 	)
 	if err != nil {
 		panic(err)
@@ -106,8 +102,8 @@ func main() {
 	var wasAlive = true // track previous frame's alive state
 
 	// Camera.
-	cam := camera.New(WindowWidth, WindowHeight)
-	cam.Zoom = 0.6 // show more of the level
+	cam := camera.New(config.WindowWidth, config.WindowHeight)
+	cam.Zoom = config.CameraZoom
 	cam.SetBounds(tm.Width, tm.Height)
 
 	// Debug mode – toggle with F3.
@@ -172,7 +168,7 @@ func main() {
 		bloodPS.Update(dt)
 
 		// -- Camera --
-		scaled := float32(tilemap.ScaledTile)
+		scaled := float32(config.ScaledTile)
 		cam.Follow(p.CenterX()*scaled, p.CenterY()*scaled, dt)
 
 		// -- Render --

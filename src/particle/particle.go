@@ -8,7 +8,7 @@ import (
 	"github.com/Zyko0/go-sdl3/img"
 	"github.com/Zyko0/go-sdl3/sdl"
 
-	"pmujer/src/tilemap"
+	"pmujer/src/config"
 )
 
 // Particle is a single particle in the system.
@@ -79,7 +79,7 @@ func (s *System) Update(dt float32) {
 // Render draws all particles. camX/camY are the camera offset in world-pixels;
 // zoom is the scale factor.
 func (s *System) Render(renderer *sdl.Renderer, camX, camY, zoom float32) {
-	st := float32(tilemap.ScaledTile)
+	st := float32(config.ScaledTile)
 	for i := range s.Particles {
 		p := &s.Particles[i]
 		// Alpha fades from 255 → 0 over the particle's lifetime.

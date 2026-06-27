@@ -6,16 +6,9 @@ import (
 	"math"
 
 	"github.com/Zyko0/go-sdl3/sdl"
+
+	"pmujer/src/config"
 )
-
-// TileSize is the native pixel size of a tile sprite (before scaling).
-const TileSize = 16
-
-// Scale is the pixel-art upscale factor.
-const Scale = 3
-
-// ScaledTile is the on-screen pixel size of one tile (TileSize * Scale).
-const ScaledTile = TileSize * Scale
 
 // TileID identifies a type of tile. 0 is always empty (air).
 type TileID uint8
@@ -249,7 +242,7 @@ func aabbConvexOverlap(rx, ry, rw, rh float32, poly ConvexHitbox) bool {
 func (tm *Tilemap) Render(renderer *sdl.Renderer, camX, camY, zoom float32, debug bool) {
 	screenW := float32(960) // window width
 	screenH := float32(720) // window height
-	s := float32(ScaledTile)
+	s := float32(config.ScaledTile)
 
 	// Visible area in world-pixels (larger when zoomed out).
 	visW := screenW / zoom

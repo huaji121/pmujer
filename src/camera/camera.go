@@ -4,7 +4,7 @@ package camera
 import (
 	"math"
 
-	"pmujer/src/tilemap"
+	"pmujer/src/config"
 )
 
 // Camera tracks a target position and smoothly follows it.
@@ -37,7 +37,7 @@ func New(viewW, viewH float32) *Camera {
 // SetBounds configures the level dimensions so the camera can clamp.
 // width/height are in tiles.
 func (c *Camera) SetBounds(width, height int) {
-	scaled := float32(tilemap.ScaledTile)
+	scaled := float32(config.ScaledTile)
 	// Visible area in world-pixels is larger when zoomed out.
 	visW := c.ViewW / c.Zoom
 	visH := c.ViewH / c.Zoom

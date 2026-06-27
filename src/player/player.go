@@ -8,6 +8,7 @@ import (
 	"github.com/Zyko0/go-sdl3/img"
 	"github.com/Zyko0/go-sdl3/sdl"
 
+	"pmujer/src/config"
 	"pmujer/src/tilemap"
 )
 
@@ -242,7 +243,7 @@ func (p *Player) Render(renderer *sdl.Renderer, camX, camY, zoom float32, debug 
 	if !p.Alive {
 		return
 	}
-	s := float32(tilemap.ScaledTile)
+	s := float32(config.ScaledTile)
 	tilePx := s * zoom
 	// Sprite is 1×1 tile-unit, offset so the collision box is centred inside it.
 	offX, offY := float32(colOffX), float32(colOffY)
