@@ -5,7 +5,7 @@ const (
 	// WindowWidth is the window width in screen pixels.
 	WindowWidth = 1280
 	// WindowHeight is the window height in screen pixels.
-	WindowHeight = 720
+	WindowHeight = 960
 
 	// TileSize is the native pixel size of a tile sprite (before scaling).
 	TileSize = 16
@@ -15,5 +15,5 @@ const (
 	ScaledTile = TileSize * Scale
 
 	// CameraZoom is the default camera zoom factor (< 1 = zoomed out).
-	CameraZoom = 0.6
+	CameraZoom = 1.0
 )
