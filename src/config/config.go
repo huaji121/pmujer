@@ -3,7 +3,7 @@ package config
 
 const (
 	// WindowWidth is the window width in screen pixels.
-	WindowWidth = 960
+	WindowWidth = 1280
 	// WindowHeight is the window height in screen pixels.
 	WindowHeight = 720
 
