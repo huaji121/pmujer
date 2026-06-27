@@ -107,6 +107,7 @@ func main() {
 
 	// Camera.
 	cam := camera.New(WindowWidth, WindowHeight)
+	cam.Zoom = 0.6 // show more of the level
 	cam.SetBounds(tm.Width, tm.Height)
 
 	// Debug mode – toggle with F3.
@@ -178,9 +179,9 @@ func main() {
 		renderer.SetDrawColor(135, 206, 235, 255) // sky blue
 		renderer.Clear()
 
-		tm.Render(renderer, cam.X, cam.Y, debug)
-		bloodPS.Render(renderer, cam.X, cam.Y)
-		p.Render(renderer, cam.X, cam.Y, debug)
+		tm.Render(renderer, cam.X, cam.Y, cam.Zoom, debug)
+		bloodPS.Render(renderer, cam.X, cam.Y, cam.Zoom)
+		p.Render(renderer, cam.X, cam.Y, cam.Zoom, debug)
 
 		renderer.Present()
 

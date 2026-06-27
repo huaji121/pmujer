@@ -76,19 +76,20 @@ func (s *System) Update(dt float32) {
 	s.Particles = alive
 }
 
-// Render draws all particles. camX/camY are the camera offset in pixels.
-func (s *System) Render(renderer *sdl.Renderer, camX, camY float32) {
-	scaled := float32(tilemap.ScaledTile)
+// Render draws all particles. camX/camY are the camera offset in world-pixels;
+// zoom is the scale factor.
+func (s *System) Render(renderer *sdl.Renderer, camX, camY, zoom float32) {
+	st := float32(tilemap.ScaledTile)
 	for i := range s.Particles {
 		p := &s.Particles[i]
 		// Alpha fades from 255 → 0 over the particle's lifetime.
 		alpha := uint8(float32(255) * (p.Life / p.MaxLife))
 		s.Texture.SetAlphaMod(alpha)
 
-		sizePx := p.Size * scaled
+		sizePx := p.Size * st * zoom
 		dst := sdl.FRect{
-			X: p.X*scaled - camX - sizePx/2,
-			Y: p.Y*scaled - camY - sizePx/2,
+			X: (p.X*st - camX)*zoom - sizePx/2,
+			Y: (p.Y*st - camY)*zoom - sizePx/2,
 			W: sizePx,
 			H: sizePx,
 		}

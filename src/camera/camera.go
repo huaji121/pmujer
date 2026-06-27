@@ -9,15 +9,18 @@ import (
 
 // Camera tracks a target position and smoothly follows it.
 type Camera struct {
-	X, Y float32 // top-left corner in pixels
+	X, Y float32 // top-left corner in world-pixels
 
 	// Follow speed (higher = snappier). Used in the exp decay formula.
 	Speed float32
 
-	// Viewport size in pixels.
+	// Zoom factor (< 1 = zoomed out, shows more; > 1 = zoomed in).
+	Zoom float32
+
+	// Viewport size in screen pixels.
 	ViewW, ViewH float32
 
-	// Level bounds in pixels (set once via SetBounds).
+	// Level bounds in world-pixels (set once via SetBounds).
 	maxX, maxY float32
 }
 
@@ -25,6 +28,7 @@ type Camera struct {
 func New(viewW, viewH float32) *Camera {
 	return &Camera{
 		Speed:  10.0,
+		Zoom:   1.0,
 		ViewW:  viewW,
 		ViewH:  viewH,
 	}
@@ -34,17 +38,23 @@ func New(viewW, viewH float32) *Camera {
 // width/height are in tiles.
 func (c *Camera) SetBounds(width, height int) {
 	scaled := float32(tilemap.ScaledTile)
-	c.maxX = float32(width)*scaled - c.ViewW
-	c.maxY = float32(height)*scaled - c.ViewH
+	// Visible area in world-pixels is larger when zoomed out.
+	visW := c.ViewW / c.Zoom
+	visH := c.ViewH / c.Zoom
+	c.maxX = float32(width)*scaled - visW
+	c.maxY = float32(height)*scaled - visH
 }
 
 // Follow smoothly moves the camera toward the given world position (pixels)
-// so that it sits at the centre of the viewport.  dt is the frame delta in
-// seconds.
+// so that it sits at the centre of the visible area.  dt is the frame delta
+// in seconds.
 func (c *Camera) Follow(targetX, targetY, dt float32) {
-	// Place target at viewport centre.
-	destX := targetX - c.ViewW/2
-	destY := targetY - c.ViewH/2
+	visW := c.ViewW / c.Zoom
+	visH := c.ViewH / c.Zoom
+
+	// Place target at visible-area centre.
+	destX := targetX - visW/2
+	destY := targetY - visH/2
 
 	// Framerate-independent exponential lerp.
 	factor := float32(1.0 - math.Exp(float64(-c.Speed*dt)))

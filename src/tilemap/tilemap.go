@@ -245,16 +245,21 @@ func aabbConvexOverlap(rx, ry, rw, rh float32, poly ConvexHitbox) bool {
 }
 
 // Render draws the visible portion of the tilemap.
-// camX, camY are the camera offset in pixels.
-func (tm *Tilemap) Render(renderer *sdl.Renderer, camX, camY float32, debug bool) {
+// camX, camY are the camera offset in world-pixels; zoom is the scale factor.
+func (tm *Tilemap) Render(renderer *sdl.Renderer, camX, camY, zoom float32, debug bool) {
 	screenW := float32(960) // window width
 	screenH := float32(720) // window height
+	s := float32(ScaledTile)
+
+	// Visible area in world-pixels (larger when zoomed out).
+	visW := screenW / zoom
+	visH := screenH / zoom
 
 	// Compute which tile columns/rows are visible.
-	startX := int(camX / float32(ScaledTile))
-	startY := int(camY / float32(ScaledTile))
-	endX := int((camX + screenW) / float32(ScaledTile)) + 1
-	endY := int((camY + screenH) / float32(ScaledTile)) + 1
+	startX := int(camX / s)
+	startY := int(camY / s)
+	endX := int((camX+visW)/s) + 1
+	endY := int((camY+visH)/s) + 1
 
 	// Clamp to map bounds.
 	if startX < 0 {
@@ -270,6 +275,8 @@ func (tm *Tilemap) Render(renderer *sdl.Renderer, camX, camY float32, debug bool
 		endY = tm.Height
 	}
 
+	tilePx := s * zoom // rendered tile size in screen pixels
+
 	for y := startY; y < endY; y++ {
 		for x := startX; x < endX; x++ {
 			id := tm.Tiles[y][x]
@@ -281,24 +288,23 @@ func (tm *Tilemap) Render(renderer *sdl.Renderer, camX, camY float32, debug bool
 				continue
 			}
 			dst := sdl.FRect{
-				X: float32(x)*float32(ScaledTile) - camX,
-				Y: float32(y)*float32(ScaledTile) - camY,
-				W: float32(ScaledTile),
-				H: float32(ScaledTile),
+				X: (float32(x)*s - camX) * zoom,
+				Y: (float32(y)*s - camY) * zoom,
+				W: tilePx,
+				H: tilePx,
 			}
 			renderer.RenderTexture(def.Texture, nil, &dst)
 
 			// Debug: draw hitbox outline (red)
 			if debug && def.Hitbox != nil {
-				s := float32(ScaledTile)
-				ox := float32(x)*s - camX
-				oy := float32(y)*s - camY
+				ox := (float32(x)*s - camX) * zoom
+				oy := (float32(y)*s - camY) * zoom
 				renderer.SetDrawColor(255, 0, 0, 255)
 				for i := 0; i < len(def.Hitbox); i++ {
 					j := (i + 1) % len(def.Hitbox)
 					renderer.RenderLine(
-						ox+def.Hitbox[i].X*s, oy+def.Hitbox[i].Y*s,
-						ox+def.Hitbox[j].X*s, oy+def.Hitbox[j].Y*s,
+						ox+def.Hitbox[i].X*tilePx, oy+def.Hitbox[i].Y*tilePx,
+						ox+def.Hitbox[j].X*tilePx, oy+def.Hitbox[j].Y*tilePx,
 					)
 				}
 			}

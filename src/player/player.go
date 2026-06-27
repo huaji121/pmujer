@@ -238,28 +238,29 @@ func (p *Player) Respawn() {
 
 // Render draws the player sprite centred on the collision box.
 // When debug is true the collision box is drawn as a green outline.
-func (p *Player) Render(renderer *sdl.Renderer, camX, camY float32, debug bool) {
+func (p *Player) Render(renderer *sdl.Renderer, camX, camY, zoom float32, debug bool) {
 	if !p.Alive {
 		return
 	}
-	scaled := float32(tilemap.ScaledTile)
+	s := float32(tilemap.ScaledTile)
+	tilePx := s * zoom
 	// Sprite is 1×1 tile-unit, offset so the collision box is centred inside it.
 	offX, offY := float32(colOffX), float32(colOffY)
 	dst := sdl.FRect{
-		X: (p.X-offX)*scaled - camX,
-		Y: (p.Y-offY)*scaled - camY,
-		W: scaled,
-		H: scaled,
+		X: (p.X-offX)*s*zoom - camX*zoom,
+		Y: (p.Y-offY)*s*zoom - camY*zoom,
+		W: tilePx,
+		H: tilePx,
 	}
 	renderer.RenderTexture(p.Texture, nil, &dst)
 
 	// Debug: draw collision box
 	if debug {
 		colDst := sdl.FRect{
-			X: p.X*scaled - camX,
-			Y: p.Y*scaled - camY,
-			W: playerColW * scaled,
-			H: playerColH * scaled,
+			X: p.X*s*zoom - camX*zoom,
+			Y: p.Y*s*zoom - camY*zoom,
+			W: playerColW * tilePx,
+			H: playerColH * tilePx,
 		}
 		renderer.SetDrawColor(0, 255, 0, 255) // green
 		renderer.RenderRect(&colDst)
