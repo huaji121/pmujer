@@ -49,6 +49,7 @@ type Player struct {
 	Alive          bool
 	FacingRight    bool
 	JumpsLeft      int  // remaining jumps (resets to MaxJumps on landing)
+	JustJumped     bool // true for one frame after a jump
 	jumpWasPressed bool // previous frame's jump key state, for edge detection
 
 	// Spawn point for respawning (collision box top-left)
@@ -100,11 +101,13 @@ func (p *Player) Update(dt float32, tm *tilemap.Tilemap) {
 	}
 
 	// Jump: W or J — edge-triggered, supports double jump
+	p.JustJumped = false
 	jumpPressed := keys[sdl.SCANCODE_W] || keys[sdl.SCANCODE_J]
 	if jumpPressed && !p.jumpWasPressed && p.JumpsLeft > 0 {
 		p.VY = float32(JumpVelocity)
 		p.Grounded = false
 		p.JumpsLeft--
+		p.JustJumped = true
 	}
 	p.jumpWasPressed = jumpPressed
 

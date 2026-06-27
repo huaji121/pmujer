@@ -5,6 +5,7 @@ import (
 	"github.com/Zyko0/go-sdl3/bin/binsdl"
 	"github.com/Zyko0/go-sdl3/sdl"
 
+	"pmujer/src/audio"
 	"pmujer/src/camera"
 	"pmujer/src/particle"
 	"pmujer/src/player"
@@ -72,7 +73,7 @@ func main() {
 	defer binimg.Load().Unload()
 	defer sdl.Quit()
 
-	if err := sdl.Init(sdl.INIT_VIDEO); err != nil {
+	if err := sdl.Init(sdl.INIT_VIDEO | sdl.INIT_AUDIO); err != nil {
 		panic(err)
 	}
 
@@ -87,6 +88,11 @@ func main() {
 
 	// Disable texture filtering – keep pixels crisp.
 	renderer.SetDefaultTextureScaleMode(sdl.SCALEMODE_NEAREST)
+
+	// Audio.
+	audioSys := audio.NewSystem()
+	defer audioSys.Quit()
+	sndJump := audioSys.LoadWAV("assets/sounds/jump.wav")
 
 	// Load assets and build level.
 	tilemap.LoadAssets(renderer)
@@ -151,6 +157,10 @@ func main() {
 
 		// -- Update --
 		p.Update(dt, tm)
+
+		if p.JustJumped {
+			audioSys.Play(sndJump)
+		}
 
 		// Detect death from falling off map → emit blood particles
 		if wasAlive && !p.Alive {
