@@ -111,9 +111,10 @@ func (p *Player) Update(dt float32, tm *tilemap.Tilemap) {
 	}
 	p.jumpWasPressed = jumpPressed
 
-	// Variable jump height: releasing the jump key early cuts upward velocity
-	if !jumpPressed && p.VY < float32(JumpVelocity)*0.4 {
-		p.VY = float32(JumpVelocity) * 0.4
+	// Variable jump height: releasing the jump key early cuts upward velocity.
+	// Cutoff at 0.32 so a tap-jump apex reaches ≈ 1/3 tile.
+	if !jumpPressed && p.VY < float32(JumpVelocity)*0.32 {
+		p.VY = float32(JumpVelocity) * 0.32
 	}
 
 	// --- Gravity ---
