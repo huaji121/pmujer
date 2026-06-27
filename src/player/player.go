@@ -126,6 +126,11 @@ func (p *Player) Update(dt float32, tm *tilemap.Tilemap) {
 	// --- Move & collide (separate axes) ---
 	p.moveAndCollide(dt, tm)
 
+	// --- Deadly tile collision ---
+	if tm.HitDeadly(p.X, p.Y, playerColW, playerColH) {
+		p.Die()
+	}
+
 	// Track last visible position (before falling off map)
 	if p.Y <= float32(tm.Height) {
 		p.LastVisX = p.X + playerColW/2

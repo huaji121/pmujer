@@ -56,6 +56,13 @@ func buildLevel() *tilemap.Tilemap {
 		tm.Set(37-i, 12-i, tilemap.TileBricks)
 	}
 
+	// Spikes on the ground
+	tm.Set(6, 12, tilemap.TileSpike)
+	tm.Set(7, 12, tilemap.TileSpike)
+	tm.Set(20, 12, tilemap.TileSpike)
+	tm.Set(21, 12, tilemap.TileSpike)
+	tm.Set(22, 12, tilemap.TileSpike)
+
 	return tm
 }
 
@@ -161,7 +168,7 @@ func main() {
 		renderer.SetDrawColor(135, 206, 235, 255) // sky blue
 		renderer.Clear()
 
-		tm.Render(renderer, cam.X, cam.Y)
+		tm.Render(renderer, cam.X, cam.Y, debug)
 		bloodPS.Render(renderer, cam.X, cam.Y)
 		p.Render(renderer, cam.X, cam.Y, debug)
 
