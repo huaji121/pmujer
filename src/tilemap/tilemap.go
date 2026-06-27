@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/Zyko0/go-sdl3/img"
 	"github.com/Zyko0/go-sdl3/sdl"
 )
 
@@ -60,36 +59,10 @@ func Register(def *TileDef) {
 
 // LoadAssets loads tile textures and registers built-in tile types.
 // Call this after SDL and the renderer are initialised.
+// Each tile type is defined in its own file (tile_*.go).
 func LoadAssets(renderer *sdl.Renderer) {
-	// Bricks
-	bricksTex, err := img.LoadTexture(renderer, "assets/textures/bricks.png")
-	if err != nil {
-		panic("failed to load bricks texture: " + err.Error())
-	}
-	Register(&TileDef{
-		ID:      TileBricks,
-		Name:    "bricks",
-		Texture: bricksTex,
-		Solid:   true,
-	})
-
-	// Spike — hitbox is an upward-pointing triangle.
-	// Vertices in CCW order: bottom-left → top-centre → bottom-right.
-	spikeTex, err := img.LoadTexture(renderer, "assets/textures/spike.png")
-	if err != nil {
-		panic("failed to load spike texture: " + err.Error())
-	}
-	Register(&TileDef{
-		ID:      TileSpike,
-		Name:    "spike",
-		Texture: spikeTex,
-		Deadly:  true,
-		Hitbox: ConvexHitbox{
-			{X: 0, Y: 1},     // bottom-left
-			{X: 0.5, Y: 0},   // top-centre
-			{X: 1, Y: 1},     // bottom-right
-		},
-	})
+	registerBricks(renderer)
+	registerSpike(renderer)
 }
 
 // Tilemap holds a 2-D grid of TileIDs and provides rendering.
