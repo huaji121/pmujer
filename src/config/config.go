@@ -26,5 +26,8 @@ const (
 	ScaledTile = TileSize * Scale
 
 	// CameraZoom is the default camera zoom factor (< 1 = zoomed out).
-	CameraZoom = 2.0
+	CameraZoom = 1.5
+
+	// CameraSpeed controls how fast the camera follows the player (higher = snappier).
+	CameraSpeed float32 = 10.0
 )

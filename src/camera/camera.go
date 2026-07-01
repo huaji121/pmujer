@@ -27,7 +27,7 @@ type Camera struct {
 // New creates a camera centred on (0, 0) with the given viewport size.
 func New(viewW, viewH float32) *Camera {
 	return &Camera{
-		Speed:  10.0,
+		Speed:  config.CameraSpeed,
 		Zoom:   1.0,
 		ViewW:  viewW,
 		ViewH:  viewH,
