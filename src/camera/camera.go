@@ -74,4 +74,10 @@ func (c *Camera) Follow(targetX, targetY, dt float32) {
 	if c.Y > c.maxY {
 		c.Y = c.maxY
 	}
+
+	// Snap to integer logical pixels to prevent sub-pixel jitter.
+	// Without this, fractional camera offsets cause inconsistent rounding
+	// when SDL maps logical pixels to the physical window.
+	c.X = float32(math.Round(float64(c.X)))
+	c.Y = float32(math.Round(float64(c.Y)))
 }

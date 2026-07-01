@@ -15,7 +15,7 @@ import (
 
 // buildLevel creates the default level layout.
 //
-//	Map size: 40 × 15 tiles (each tile = 16 px × scale 3 = 48 px on screen).
+//	Map size: 40 x 15 tiles (each tile = 16 px x scale 3 = 48 px on screen).
 //	Index 0 = top row, index 14 = bottom row.
 func buildLevel() *tilemap.Tilemap {
 	tm := tilemap.New(40, 15)
@@ -82,8 +82,15 @@ func main() {
 	defer renderer.Destroy()
 	defer window.Destroy()
 
-	// Disable texture filtering – keep pixels crisp.
+	// Disable texture filtering -- keep pixels crisp.
 	renderer.SetDefaultTextureScaleMode(sdl.SCALEMODE_NEAREST)
+
+	// Set logical presentation: render at 1920x1080, mapped to 1280x960 window.
+	// This avoids pixel jitter by letting SDL handle the non-integer scaling
+	// consistently, rather than doing fractional-pixel math ourselves.
+	renderer.SetLogicalPresentation(
+		config.LogicalWidth, config.LogicalHeight, config.PresentationMode,
+	)
 
 	// Audio.
 	audioSys := audio.NewSystem()
@@ -101,12 +108,12 @@ func main() {
 	bloodPS := particle.NewSystem(renderer, "assets/textures/blood.png", 20.0)
 	var wasAlive = true // track previous frame's alive state
 
-	// Camera.
-	cam := camera.New(config.WindowWidth, config.WindowHeight)
+	// Camera -- use logical resolution as the viewport.
+	cam := camera.New(config.LogicalWidth, config.LogicalHeight)
 	cam.Zoom = config.CameraZoom
 	cam.SetBounds(tm.Width, tm.Height)
 
-	// Debug mode – toggle with F3.
+	// Debug mode -- toggle with F3.
 	debug := false
 
 	// Track real time for a fixed-step physics loop.
@@ -159,7 +166,7 @@ func main() {
 			audioSys.Play(sndJump)
 		}
 
-		// Detect death from falling off map → emit blood particles
+		// Detect death from falling off map -> emit blood particles
 		if wasAlive && !p.Alive {
 			bloodPS.Emit(p.LastVisX, p.LastVisY, 30, 8.0, 1.0, 0.3)
 		}

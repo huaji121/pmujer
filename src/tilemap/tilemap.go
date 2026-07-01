@@ -240,8 +240,8 @@ func aabbConvexOverlap(rx, ry, rw, rh float32, poly ConvexHitbox) bool {
 // Render draws the visible portion of the tilemap.
 // camX, camY are the camera offset in world-pixels; zoom is the scale factor.
 func (tm *Tilemap) Render(renderer *sdl.Renderer, camX, camY, zoom float32, debug bool) {
-	screenW := float32(config.WindowWidth)
-	screenH := float32(config.WindowHeight)
+	screenW := float32(config.LogicalWidth)
+	screenH := float32(config.LogicalHeight)
 	s := float32(config.ScaledTile)
 
 	// Visible area in world-pixels (larger when zoomed out).
