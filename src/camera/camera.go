@@ -17,7 +17,7 @@ type Camera struct {
 	// Zoom factor (< 1 = zoomed out, shows more; > 1 = zoomed in).
 	Zoom float32
 
-	// Viewport size in screen pixels.
+	// Viewport size in logical pixels.
 	ViewW, ViewH float32
 
 	// Level bounds in world-pixels (set once via SetBounds).
@@ -27,10 +27,10 @@ type Camera struct {
 // New creates a camera centred on (0, 0) with the given viewport size.
 func New(viewW, viewH float32) *Camera {
 	return &Camera{
-		Speed:  config.CameraSpeed,
-		Zoom:   1.0,
-		ViewW:  viewW,
-		ViewH:  viewH,
+		Speed: config.CameraSpeed,
+		Zoom:  1.0,
+		ViewW: viewW,
+		ViewH: viewH,
 	}
 }
 
@@ -38,7 +38,6 @@ func New(viewW, viewH float32) *Camera {
 // width/height are in tiles.
 func (c *Camera) SetBounds(width, height int) {
 	scaled := float32(config.ScaledTile)
-	// Visible area in world-pixels is larger when zoomed out.
 	visW := c.ViewW / c.Zoom
 	visH := c.ViewH / c.Zoom
 	c.maxX = float32(width)*scaled - visW
@@ -57,6 +56,8 @@ func (c *Camera) Follow(targetX, targetY, dt float32) {
 	destY := targetY - visH/2
 
 	// Framerate-independent exponential lerp.
+	// At Speed=5.0, one second closes ~99.3% of the gap; the trailing
+	// effect is clearly visible frame-to-frame.
 	factor := float32(1.0 - math.Exp(float64(-c.Speed*dt)))
 	c.X += (destX - c.X) * factor
 	c.Y += (destY - c.Y) * factor
@@ -68,16 +69,14 @@ func (c *Camera) Follow(targetX, targetY, dt float32) {
 	if c.Y < 0 {
 		c.Y = 0
 	}
-	if c.X > c.maxX {
+	if c.maxX > 0 && c.X > c.maxX {
 		c.X = c.maxX
 	}
-	if c.Y > c.maxY {
+	if c.maxY > 0 && c.Y > c.maxY {
 		c.Y = c.maxY
 	}
 
 	// Snap to integer logical pixels to prevent sub-pixel jitter.
-	// Without this, fractional camera offsets cause inconsistent rounding
-	// when SDL maps logical pixels to the physical window.
 	c.X = float32(math.Round(float64(c.X)))
 	c.Y = float32(math.Round(float64(c.Y)))
 }

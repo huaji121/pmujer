@@ -29,5 +29,5 @@ const (
 	CameraZoom = 1.5
 
 	// CameraSpeed controls how fast the camera follows the player (higher = snappier).
-	CameraSpeed float32 = 10.0
+	CameraSpeed float32 = 5.0
 )
